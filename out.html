@@ -1,0 +1,262 @@
+<!DOCTYPE>
+
+<html lang="en">
+
+<head>
+    <meta charset="utf-8"/>
+
+    <title>Go call graph</title>
+
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
+
+    <script src="https://unpkg.com/cytoscape/dist/cytoscape.min.js"></script>
+
+    <script src="https://unpkg.com/cytoscape-cose-bilkent@4.0.0/cytoscape-cose-bilkent.js"></script>
+
+    <style>
+        body {
+            font-family: helvetica, serif;
+            font-size: 14px;
+        }
+
+        #cy {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .overlay {
+            position: absolute;
+            z-index: 10;
+        }
+
+        #info {
+            left: 0;
+            top: 0;
+            margin: 10px;
+        }
+
+        #pkg-list {
+            font-family: monospace;
+            color: black;
+            opacity: 0.7;
+        }
+
+        #gocyto-link {
+            position: absolute;
+            margin: 10px;
+            left: 0;
+            bottom: 0;
+            opacity: 0.5;
+            font-size: 1em;
+        }
+    </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+
+            window.cy = cytoscape({
+                container: document.getElementById('cy'),
+
+                layout: {
+                    name: 'cose-bilkent',
+                    
+                    nodeDimensionsIncludeLabels: true,
+                    
+                    refresh: 30,
+                    
+                    fit: true,
+                    
+                    padding: 30,
+                    
+                    randomize: true,
+                    
+                    nodeRepulsion: 1000,
+                    
+                    idealEdgeLength: 40,
+                    
+                    edgeElasticity: 0.3,
+                    
+                    nestingFactor: 0.03,
+                    
+                    gravity: 0.15,
+                    
+                    numIter: 5000,
+                    
+                    tile: true,
+                    
+                    animate: 'end',
+                    
+                    tilingPaddingVertical: 30,
+                    
+                    tilingPaddingHorizontal: 30,
+                    
+                    gravityRangeCompound: 1.0,
+                    
+                    gravityCompound: 0.08,
+                    
+                    gravityRange: 2.0,
+                    
+                    initialEnergyOnIncremental: 0.9
+                },
+
+                style: [
+                    {
+                        selector: 'core',
+                        style: {
+                            "active-bg-opacity": 0.3,
+                            "active-bg-color": "#ff0",
+                        }
+                    },
+                    {
+                        selector: 'node',
+                        style: {
+                            'shape': 'tag',
+                            'border-color': '#323232',
+                            'border-opacity': 0.7,
+                            'border-width': 1,
+                            'border-style': 'solid',
+                            "font-weight": 300
+                        }
+                    },
+                    {
+                        selector: 'node[color]',
+                        style: {
+                            'shape': 'tag',
+                            'background-color': 'data(color)'
+                        }
+                    },
+                    {
+                        selector: 'node.global',
+                        style: {
+                            'shape': 'ellipse'
+                        }
+                    },
+                    {
+                        selector: 'node.unexported',
+                        style: {
+                            'border-color': '#323232',
+                            'border-opacity': 0.6,
+                            'border-width': 2,
+                            'border-style': 'dashed'
+                        }
+                    },
+
+                    {
+                        selector: 'node[label]',
+                        style: {
+                            label: "data(label)",
+                            "font-family": "monospace"
+                        }
+                    },
+
+                    {
+                        selector: 'node:parent',
+                        style: {
+                            'background-opacity': 0.333,
+                            'border-width': 0,
+                            'border-opacity': 0,
+                        },
+                    },
+                    {
+                        selector: 'node.package',
+                        style: {
+                            'font-style': "italic",
+                            "font-weight": 700
+                        },
+                    },
+                    {
+                        selector: 'node.type',
+                        style: {
+                            "font-weight": 700
+                        },
+                    },
+                    {
+                        selector: 'node:parent',
+                        style: {
+                            'compound-sizing-wrt-labels': 'include'
+                        },
+                    },
+
+                    {
+                        selector: 'edge',
+                        style: {
+                            'line-color': '#a12b87',
+                            'curve-style': "straight",
+                            "target-arrow-shape": "vee",
+                            "target-arrow-color": "#a12b87",
+                            "arrow-scale": 1.5,
+                        },
+                    },
+                    {
+                        selector: 'edge.function',
+                        style: {
+                            "curve-style": "bezier"
+                        }
+                    },
+                    {
+                        selector: 'edge.concurrent',
+                        style: {
+                            "mid-target-arrow-shape": "triangle-tee",
+                        }
+                    },
+                    {
+                        selector: 'edge.deferred',
+                        style: {
+                            "mid-target-arrow-shape": "diamond",
+                        }
+                    },
+                    {
+                        selector: 'edge.closure',
+                        style: {
+                            "line-style": "dashed",
+                            "line-dash-pattern": [6, 6],
+                        }
+                    },
+                    {
+                        selector: 'edge.static',
+                        style: {
+                            'line-color': '#ef60f9',
+                            "target-arrow-color": "#ef60f9",
+                        }
+                    },
+                    {
+                        selector: 'edge.dynamic',
+                        style: {
+                            'line-color': '#5ece5c',
+                            "target-arrow-color": "#5ece5c",
+                        }
+                    },
+                    {
+                        selector: 'edge.method',
+                        style: {
+                            'line-color': '#64a1a0',
+                            "target-arrow-color": "#64a1a0",
+                        }
+                    },
+                ],
+
+                elements: {"nodes":[{"data":{"id":"n3","label":"main","description":"command-line-arguments","parent":"","color":"#92d4a4"},"classes":["package"]},{"data":{"id":"n2","label":"yy","parent":"n3","color":"#fc7485"},"classes":["global","unexported"]},{"data":{"id":"n4","label":"yyy","parent":"n3","color":"#fc7485"},"classes":["global","unexported"]},{"data":{"id":"n6","label":"main","parent":"n3","color":"#3d4cc4"},"classes":["global","unexported"]},{"data":{"id":"n8","label":"xx","parent":"n3","color":"#fc7485"},"classes":["global","unexported"]},{"data":{"id":"n9","label":"xxx","parent":"n3","color":"#fc7485"},"classes":["global","unexported"]}],"edges":[{"data":{"id":"n1","source":"n2","target":"n4"},"classes":["static","function","call"]},{"data":{"id":"n5","source":"n6","target":"n2"},"classes":["static","function","call"]},{"data":{"id":"n7","source":"n8","target":"n9"},"classes":["static","function","call"]},{"data":{"id":"na","source":"n6","target":"n8"},"classes":["static","function","call"]},{"data":{"id":"nb","source":"n6","target":"n2"},"classes":["static","function","call"]}]}
+
+            });
+
+        });
+    </script>
+</head>
+
+<body>
+<div id="info" class="overlay">
+    <pre id="pkg-list">command-line-arguments
+</pre>
+</div>
+
+<h2 id="gocyto-link" class="overlay"><a href="https://github.com/protolambda/gocyto">Gocyto</a> callgraph</h2>
+
+<div id="cy"></div>
+
+</body>
+
+</html>
