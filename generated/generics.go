@@ -90022,3 +90022,21 @@ func MaxOfType10001[T number](a, b T) T {
 	return b
 }
 
+
+func MaxOfType10002[T number](a, b T) T {
+	if a > b {
+		return a
+	}
+
+	return b
+}
+
+
+func MaxOfType10003[T number](a, b T) T {
+	if a > b {
+		return a
+	}
+
+	return b
+}
+

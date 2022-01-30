@@ -8,7 +8,7 @@ import (
 
 const (
 	rootFolder = "./generated/"
-	nn         = 10002
+	nn = 10004
 )
 
 func main() {
@@ -78,7 +78,7 @@ func MaxOfType` + strconv.Itoa(i) + `[T number](a, b T) T {
 
 func generateFunctionCalls() {
 	// generate calls for every function
-	generate(rootFolder+"calls.go", "package main\n\nfunc main() {\n", "}\n",
+	generate(rootFolder+"calls_main.go", "package main\n\nfunc main() {\n", "}\n",
 		func(i int) string {
 			s := strconv.Itoa(i)
 			return "\tMaxOfType" + s + "(" + s + ", " + s + ")\n"

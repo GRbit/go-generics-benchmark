@@ -90018,3 +90018,21 @@ func MaxOfType10001(a, b int) int {
 	return b
 }
 
+
+func MaxOfType10002(a, b int) int {
+	if a > b {
+		return a
+	}
+
+	return b
+}
+
+
+func MaxOfType10003(a, b int) int {
+	if a > b {
+		return a
+	}
+
+	return b
+}
+
